@@ -31,8 +31,11 @@ export default function BlogComments({ blogId, initialComments }: BlogCommentsPr
         setError("");
 
         try {
-            // @ts-ignore
-            const userId = session.user.id;
+            const userId = (session as any)?.user?.id;
+            if (!userId) {
+                setError("You must be logged in to comment.");
+                return;
+            }
             const result = await addComment(blogId, userId, newComment);
 
             if (result.success) {
@@ -70,7 +73,7 @@ export default function BlogComments({ blogId, initialComments }: BlogCommentsPr
             </div>
 
             {/* Comment Form or Auth Prompt */}
-            {!session ? (
+            {!session?.user ? (
                 <div className="mb-16 p-8 bg-primary/5 border border-dashed border-primary/30 rounded-3xl text-center group hover:bg-primary/10 transition-all">
                     <LogIn className="w-10 h-10 text-primary mx-auto mb-4 group-hover:scale-110 transition-transform" />
                     <h4 className="text-xl font-bold mb-2">Join the Conversation</h4>
@@ -87,7 +90,7 @@ export default function BlogComments({ blogId, initialComments }: BlogCommentsPr
                     <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-xl shadow-primary/5 focus-within:border-primary/50 transition-all hover:shadow-primary/10">
                         <div className="flex gap-4 items-start">
                             <div className="w-12 h-12 rounded-2xl overflow-hidden bg-primary/10 border border-primary/20">
-                                {session.user.image ? (
+                                {session.user?.image ? (
                                     <img src={session.user.image} alt="" className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center">
@@ -105,7 +108,7 @@ export default function BlogComments({ blogId, initialComments }: BlogCommentsPr
                                 {error && <p className="text-xs text-red-500 font-bold">{error}</p>}
                                 <div className="flex items-center justify-between pt-4 border-t border-border/50">
                                     <p className="text-xs text-muted-foreground italic">
-                                        Signed in as {session.user.email}
+                                        Signed in as {session.user?.email}
                                     </p>
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
