@@ -14,6 +14,24 @@ authors = [
     ("Noah Backend", "DevOps Engineer")
 ]
 
+comment_authors = [
+    "Jamie Tech", "Dev Dan", "UX Luna", "Cloud Chris", "Archi Amy",
+    "Security Sam", "Soft Skill Sue", "Frontend Frank", "Backend Barb", "Fullstack Fred"
+]
+
+comment_contents = [
+    "This is a fantastic deep dive! I've been looking for something this detailed about {cat}.",
+    "Interesting perspective on {cat}. I hadn't considered the impact of human-centric design in this context.",
+    "Great article! The point about modular architectures really resonated with me.",
+    "Thanks for sharing these technical strategies. I'll definitely be trying some of these in my next project.",
+    "The outlook for 2026 seems spot on. Agility is definitely going to be the key differentiator.",
+    "I'm a bit skeptical about the AI integration part, but you make a compelling case for its necessity.",
+    "Excellent summary. Do you have any additional resources you'd recommend for learning more about {cat}?",
+    "Love the layout and the content. Very professional and insightful.",
+    "As someone working in {cat}, I find your analysis very accurate and helpful.",
+    "Keep up the great work! Your blogs are always a highlight of my week."
+]
+
 images = [
     "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe",
     "https://images.unsplash.com/photo-1555099962-4199c345e5dd",
@@ -81,28 +99,34 @@ blogs = []
 start_date = datetime(2026, 2, 6)
 
 for i in range(1, 51):
-    category = random.choice(categories)
-    author, role = random.choice(authors)
-    base_image = random.choice(images)
+    category = categories[i % len(categories)]
+    author, role = authors[i % len(authors)]
+    base_image = images[i % len(images)]
     image = f"{base_image}?q=80&w=2670&auto=format&fit=crop"
     
-    date = start_date - timedelta(days=i*2 + random.randint(0, 5))
+    # Deterministic dates
+    random_offset = (i * 1337) % (24 * 60 * 60)
+    date = start_date - timedelta(days=i*2) - timedelta(seconds=random_offset)
     formatted_date = date.strftime("%b %d, %Y")
     
-    title_pattern = random.choice(titles)
+    title_pattern = titles[i % len(titles)]
     title = title_pattern.format(category)
     if i > len(titles):
         title = f"{title} (Exploration {i // len(titles) + 1})"
 
-    intro = random.choice(intros).replace("{cat}", category)
+    intro = intros[i % len(intros)].replace("{cat}", category)
     
-    selected_sections = random.sample(body_sections, 4)
+    # Deterministic sections
+    selected_sections = []
+    for j in range(4):
+        selected_sections.append(body_sections[(i+j) % len(body_sections)])
+        
     content_parts = [f"<p>{intro}</p>"]
     for section in selected_sections:
         content_parts.append(f"<h3>{section['heading']}</h3>")
         content_parts.append(f"<p>{section['content'].replace('{cat}', category)}</p>")
     
-    quote = random.choice(quotes)
+    quote = quotes[i % len(quotes)]
     quote_text, quote_author = quote.split(" - ")
     content_parts.append(f"<blockquote>\"{quote_text}\" <br/>— <cite>{quote_author}</cite></blockquote>")
     
@@ -113,6 +137,23 @@ for i in range(1, 51):
     
     word_count = len(content.split())
     read_time = max(5, word_count // 180)
+
+    # Generate 10-30 comments deterministically
+    num_comments = 10 + (i % 21)
+    blog_comments = []
+    for j in range(num_comments):
+        c_auth = comment_authors[(i + j) % len(comment_authors)]
+        c_content = comment_contents[(i * j) % len(comment_contents)].replace("{cat}", category)
+        c_day_offset = (i + j) % 5
+        c_date = date + timedelta(days=c_day_offset / 24)
+        c_date_str = c_date.strftime("%b %d, %Y")
+
+        blog_comments.append({
+            "id": f"c-{i}-{j}",
+            "author": c_auth,
+            "content": c_content,
+            "date": c_date_str
+        })
 
     blog = {
         "id": str(i),
@@ -126,7 +167,8 @@ for i in range(1, 51):
         "readTime": f"{read_time} min read",
         "image": image,
         "category": category,
-        "tags": [category, "Insights", "2026", "Tech"]
+        "tags": [category, "Insights", "2026", "Tech"],
+        "comments": blog_comments
     }
     blogs.append(blog)
 

@@ -132,6 +132,47 @@ export default async function BlogDetailPage({ params }: PageProps) {
                             </div>
                         </div>
                     </div>
+
+                    {/* Comments Section */}
+                    <div className="mt-16 pt-16 border-t border-border">
+                        <div className="flex items-center justify-between mb-10">
+                            <h3 className="text-3xl font-bold tracking-tight">Discussion ({blog.comments.length})</h3>
+                            <button className="text-sm font-bold text-primary hover:underline">Guidelines</button>
+                        </div>
+
+                        <div className="space-y-12">
+                            {blog.comments.map((comment) => (
+                                <div key={comment.id} className="relative group">
+                                    <div className="flex gap-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center shrink-0 border border-border group-hover:border-primary/30 transition-colors">
+                                            <User className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <h5 className="font-bold text-foreground">{comment.author}</h5>
+                                                <span className="text-xs text-muted-foreground">{comment.date}</span>
+                                            </div>
+                                            <p className="text-foreground/70 leading-relaxed text-sm">
+                                                {comment.content}
+                                            </p>
+                                            <div className="flex items-center gap-4 mt-4">
+                                                <button className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">Reply</button>
+                                                <button className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">Share</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Sub-line for visual hierarchy */}
+                                    <div className="absolute left-6 top-16 bottom-0 w-px bg-border group-last:hidden h-8" />
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Comment Input Placeholder */}
+                        <div className="mt-16 p-8 bg-card/50 rounded-3xl border border-dashed border-border text-center">
+                            <p className="text-sm text-muted-foreground mb-4">Sharing is caring. Join the conversation!</p>
+                            <button className="px-8 py-3 bg-primary text-primary-foreground font-bold rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">Sign in to Comment</button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Right / Newsletter / CTA */}
