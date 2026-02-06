@@ -59,6 +59,7 @@ model Comment {
   content   String
   blogId    String
   userId    String
+  sentiment String   @default("neutral")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 }

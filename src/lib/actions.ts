@@ -48,8 +48,29 @@ export async function signup(prevState: any, formData: FormData) {
     }
 }
 
+function analyzeSentiment(content: string): 'positive' | 'negative' | 'neutral' {
+    const positiveKeywords = ["great", "awesome", "love", "excellent", "good", "nice", "perfect", "fantastic", "interesting", "helpful", "thanks", "thank you", "best"];
+    const negativeKeywords = ["bad", "hate", "terrible", "worst", "horrible", "awful", "don't like", "dislike", "useless", "broken", "wrong", "skeptical", "not good"];
+
+    const lowerContent = content.toLowerCase();
+
+    let score = 0;
+    positiveKeywords.forEach(word => {
+        if (lowerContent.includes(word)) score++;
+    });
+    negativeKeywords.forEach(word => {
+        if (lowerContent.includes(word)) score--;
+    });
+
+    if (score > 0) return 'positive';
+    if (score < 0) return 'negative';
+    return 'neutral';
+}
+
 export async function addComment(blogId: string, userId: string, content: string) {
     if (!content.trim()) return { error: "Comment cannot be empty" };
+
+    const sentiment = analyzeSentiment(content);
 
     try {
         const comment = await prisma.comment.create({
@@ -57,6 +78,7 @@ export async function addComment(blogId: string, userId: string, content: string
                 content,
                 blogId,
                 userId,
+                sentiment,
             },
             include: {
                 user: true,

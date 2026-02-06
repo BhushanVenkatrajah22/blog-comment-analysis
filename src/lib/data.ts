@@ -3,6 +3,7 @@ export type Comment = {
   author: string;
   content: string;
   date: string;
+  sentiment: 'positive' | 'negative' | 'neutral';
 };
 
 export type Blog = {
@@ -155,11 +156,15 @@ function generateBlogs(count: number): Blog[] {
       const cDateObj = new Date(timestamp + (cDayOffset * dayInMs / 24)); // Comments slightly after post
       const cDateStr = `${months[cDateObj.getMonth()]} ${String(cDateObj.getDate()).padStart(2, '0')}, ${String(cDateObj.getFullYear()).slice(-2)}`;
 
+      const sentiments: ('positive' | 'negative' | 'neutral')[] = ['positive', 'negative', 'neutral'];
+      const cSentiment = sentiments[(i * j) % sentiments.length];
+
       blogComments.push({
         id: `c-${i}-${j}`,
         author: cAuth,
         content: cContent,
-        date: cDateStr
+        date: cDateStr,
+        sentiment: cSentiment
       });
     }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User, Send, MessageSquare, LogIn, Loader2 } from "lucide-react";
+import { User, Send, MessageSquare, LogIn, Loader2, Smile, Frown, Meh, Percent } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Comment } from "@/lib/data";
 import { cn } from "@/lib/utils";
@@ -52,6 +52,7 @@ export default function BlogComments({ blogId, initialComments }: BlogCommentsPr
                     author: session.user?.name || "Anonymous",
                     content: newComment,
                     date: dateStr,
+                    sentiment: (result.comment as any).sentiment || 'neutral',
                 };
 
                 setComments(prev => [comment, ...prev]);
@@ -148,7 +149,22 @@ export default function BlogComments({ blogId, initialComments }: BlogCommentsPr
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between mb-2">
-                                        <h5 className="font-bold text-foreground group-hover:text-primary transition-colors">{comment.author}</h5>
+                                        <div className="flex items-center gap-3">
+                                            <h5 className="font-bold text-foreground group-hover:text-primary transition-colors">{comment.author}</h5>
+                                            {comment.sentiment && (
+                                                <div className={cn(
+                                                    "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1",
+                                                    comment.sentiment === 'positive' && "bg-green-500/10 text-green-500 border border-green-500/20",
+                                                    comment.sentiment === 'negative' && "bg-red-500/10 text-red-500 border border-red-500/20",
+                                                    comment.sentiment === 'neutral' && "bg-muted text-muted-foreground border border-border"
+                                                )}>
+                                                    {comment.sentiment === 'positive' && <Smile className="w-3 h-3" />}
+                                                    {comment.sentiment === 'negative' && <Frown className="w-3 h-3" />}
+                                                    {comment.sentiment === 'neutral' && <Meh className="w-3 h-3" />}
+                                                    {comment.sentiment}
+                                                </div>
+                                            )}
+                                        </div>
                                         <span className="text-xs text-muted-foreground">{comment.date}</span>
                                     </div>
                                     <p className="text-foreground/70 leading-relaxed text-sm bg-white/5 p-4 rounded-2xl border border-white/5 group-hover:border-primary/10 transition-all">
