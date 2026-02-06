@@ -21,7 +21,7 @@ export type Blog = {
   comments: Comment[];
 };
 
-const categories = ["Design", "Development", "UX", "Security", "Architecture", "AI", "Cloud", "Soft Skills"];
+export const categories = ["Design", "Development", "UX", "Security", "Architecture", "AI", "Cloud", "Soft Skills"];
 const authors = [
   { name: "Alex Rivers", role: "Senior UI Designer" },
   { name: "Sarah Code", role: "Full Stack Developer" },

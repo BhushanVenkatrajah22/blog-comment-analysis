@@ -134,7 +134,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
                         </div>
                     </div>
 
-                    <BlogComments initialComments={blog.comments} />
+                    <BlogComments blogId={blog.id} initialComments={blog.comments} />
                 </div>
 
                 {/* Right / Newsletter / CTA */}
