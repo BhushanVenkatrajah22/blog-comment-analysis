@@ -6,11 +6,14 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 import { Menu, X, Sparkles, ChevronDown, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { blogs } from "@/lib/data";
+import { blogs as mockBlogs } from "@/lib/data";
+import { getRecentBlogs } from "@/lib/actions";
+import { useSession, signOut } from "next-auth/react";
 
 const navLinks = [
     { name: "Home", href: "/" },
     { name: "Blogs", href: "/blogs", dropdown: true },
+    { name: "Add Blog", href: "/add-blog" },
     { name: "Contact", href: "/contact" },
 ];
 
@@ -18,10 +21,22 @@ export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [dbRecentBlogs, setDbRecentBlogs] = useState<any[]>([]);
+    const { data: session, status } = useSession();
     const { scrollY } = useScroll();
     const pathname = usePathname();
 
-    const recentBlogs = [...blogs]
+    useEffect(() => {
+        const fetchRecent = async () => {
+            const result = await getRecentBlogs();
+            if (result.success) {
+                setDbRecentBlogs(result.blogs);
+            }
+        };
+        fetchRecent();
+    }, [pathname]); // Refresh when navigating
+
+    const recentBlogs = [...dbRecentBlogs, ...mockBlogs]
         .sort((a, b) => b.timestamp - a.timestamp)
         .slice(0, 10);
 
@@ -127,7 +142,7 @@ export default function Navbar() {
                                                     href="/blogs"
                                                     className="block w-full text-center py-2 bg-secondary/50 hover:bg-secondary rounded-xl text-xs font-bold transition-colors"
                                                 >
-                                                    View All 50 Posts
+                                                    View All {[...dbRecentBlogs, ...mockBlogs].length} Posts
                                                 </Link>
                                             </div>
                                         </motion.div>
@@ -140,13 +155,39 @@ export default function Navbar() {
                     <div className="h-6 w-px bg-border mx-2" />
 
                     <div className="flex items-center gap-4">
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-5 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-                        >
-                            Subscribe
-                        </motion.button>
+                        {status === "authenticated" ? (
+                            <div className="flex items-center gap-4">
+                                <div className="flex flex-col items-end hidden lg:flex">
+                                    <span className="text-xs font-bold leading-none">{session.user?.name}</span>
+                                    <span className="text-[10px] text-muted-foreground">Resident</span>
+                                </div>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => signOut()}
+                                    className="px-5 py-2.5 bg-secondary text-secondary-foreground rounded-full text-sm font-bold hover:bg-secondary/80 transition-colors"
+                                >
+                                    Sign Out
+                                </motion.button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-3">
+                                <Link href="/login">
+                                    <button className="px-4 py-2 text-sm font-bold hover:text-primary transition-colors">
+                                        Log In
+                                    </button>
+                                </Link>
+                                <Link href="/signup">
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        className="px-5 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                                    >
+                                        Join Community
+                                    </motion.button>
+                                </Link>
+                            </div>
+                        )}
                     </div>
                 </div>
 

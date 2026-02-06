@@ -54,10 +54,28 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model Blog {
+  id          String    @id @default(cuid())
+  title       String
+  excerpt     String
+  content     String
+  author      String
+  authorRole  String
+  date        String
+  timestamp   BigInt
+  readTime    String
+  image       String
+  category    String
+  tags        String
+  comments    Comment[]
+  createdAt   DateTime  @default(now())
+}
+
 model Comment {
   id        String   @id @default(cuid())
   content   String
   blogId    String
+  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
   userId    String?
   sentiment String   @default("neutral")
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)

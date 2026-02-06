@@ -4,9 +4,11 @@ import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Zap, Shield, Globe, Sparkles, TrendingUp, Users, Cpu } from "lucide-react";
 import BlogCard from "@/components/ui/BlogCard";
-import { blogs, categories } from "@/lib/data";
+import { blogs as mockBlogs, categories } from "@/lib/data";
 import NovaParticles from "@/components/ui/NovaParticles";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
+import { getAllBlogs } from "@/lib/actions";
+import { Blog } from "@/lib/data";
 
 const features = [
   {
@@ -34,16 +36,24 @@ const stats = [
 
 export default function Home() {
   const containerRef = useRef(null);
+  const [latestBlogs, setLatestBlogs] = useState<Blog[]>([]);
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"]
   });
 
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      const blogs = await getAllBlogs();
+      setLatestBlogs(blogs.slice(0, 3) as Blog[]);
+    };
+    fetchBlogs();
+  }, []);
+
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -50]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
-
-  const latestBlogs = blogs.slice(0, 3);
 
   return (
     <div ref={containerRef} className="flex flex-col min-h-screen relative overflow-x-hidden">

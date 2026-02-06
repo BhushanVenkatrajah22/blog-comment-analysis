@@ -1,3 +1,5 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { Sparkles, Mail, Lock, UserPlus, User, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";

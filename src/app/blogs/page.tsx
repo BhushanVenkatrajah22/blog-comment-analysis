@@ -3,19 +3,33 @@
 import { motion } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import BlogCard from "@/components/ui/BlogCard";
-import { blogs } from "@/lib/data";
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
+import { getAllBlogs } from "@/lib/actions";
+import { Blog } from "@/lib/data";
 
 function BlogsContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const categoryFilter = searchParams.get("category");
+    const [allBlogs, setAllBlogs] = useState<Blog[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchBlogs = async () => {
+            const blogs = await getAllBlogs();
+            setAllBlogs(blogs as Blog[]);
+            setLoading(false);
+        };
+        fetchBlogs();
+    }, []);
 
     const filteredBlogs = categoryFilter
-        ? blogs.filter(blog => blog.category.toLowerCase() === categoryFilter.toLowerCase())
-        : blogs;
+        ? allBlogs.filter(blog => blog.category.toLowerCase() === categoryFilter.toLowerCase())
+        : allBlogs;
 
     const sortedBlogs = [...filteredBlogs].sort((a, b) => b.timestamp - a.timestamp);
+
+    if (loading) return <div className="text-center py-20 text-muted-foreground font-bold italic">Gathering Insights...</div>;
 
     return (
         <div className="container mx-auto px-6">

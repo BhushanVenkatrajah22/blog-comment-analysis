@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Calendar, User, Clock, Tag, Share2 } from "lucide-react";
-import { blogs } from "@/lib/data";
+import { ArrowLeft, Calendar, User, Clock, Tag, Share2, Pencil } from "lucide-react";
+import { blogs as mockBlogs } from "@/lib/data";
 import BlogCard from "@/components/ui/BlogCard";
 import BlogComments from "@/components/ui/BlogComments";
+import DeleteBlogButton from "@/components/ui/DeleteBlogButton";
+import { getBlogById, getAllBlogs } from "@/lib/actions";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -12,13 +14,14 @@ interface PageProps {
 
 export default async function BlogDetailPage({ params }: PageProps) {
     const { id } = await params;
-    const blog = blogs.find((b) => b.id === id);
+    const blog = await getBlogById(id) as any;
 
     if (!blog) {
         notFound();
     }
 
-    const relatedBlogs = blogs
+    const allBlogs = await getAllBlogs();
+    const relatedBlogs = allBlogs
         .filter((b) => b.id !== id && b.category === blog.category)
         .slice(0, 2);
 
@@ -26,12 +29,10 @@ export default async function BlogDetailPage({ params }: PageProps) {
         <article className="min-h-screen pb-20">
             {/* Hero Header */}
             <div className="relative h-[70vh] min-h-[500px] w-full">
-                <Image
+                <img
                     src={blog.image}
                     alt={blog.title}
-                    fill
-                    priority
-                    className="object-cover"
+                    className="absolute inset-0 w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
@@ -45,9 +46,9 @@ export default async function BlogDetailPage({ params }: PageProps) {
                         </Link>
 
                         <div className="flex flex-wrap gap-2 mb-6">
-                            {blog.tags.map(tag => (
+                            {blog.tags.split(",").map((tag: string) => (
                                 <span key={tag} className="px-3 py-1 bg-primary/20 backdrop-blur-md border border-primary/30 rounded-full text-xs font-semibold text-primary uppercase tracking-wider">
-                                    {tag}
+                                    {tag.trim()}
                                 </span>
                             ))}
                         </div>
@@ -100,8 +101,8 @@ export default async function BlogDetailPage({ params }: PageProps) {
                         <div className="pt-8 border-t border-border">
                             <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Top Tags</h4>
                             <div className="flex flex-wrap gap-2">
-                                {blog.tags.map(tag => (
-                                    <Link key={tag} href="#" className="text-sm text-foreground/70 hover:text-primary transition-colors underline-offset-4 hover:underline">#{tag}</Link>
+                                {blog.tags.split(",").map((tag: string) => (
+                                    <Link key={tag} href="#" className="text-sm text-foreground/70 hover:text-primary transition-colors underline-offset-4 hover:underline">#{tag.trim()}</Link>
                                 ))}
                             </div>
                         </div>
@@ -147,6 +148,22 @@ export default async function BlogDetailPage({ params }: PageProps) {
                         <button className="w-full py-4 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">Subscribe</button>
                     </div>
 
+                    {/* Story Management for non-mock blogs */}
+                    {!(blog.id.length <= 2 && !isNaN(Number(blog.id))) && (
+                        <div className="p-8 rounded-3xl border border-primary/20 bg-primary/5 mt-8">
+                            <h4 className="text-sm font-bold text-primary uppercase tracking-widest mb-4">Story Management</h4>
+                            <p className="text-xs text-muted-foreground mb-6 leading-relaxed">Update your story or permanently remove it from the platform.</p>
+                            <div className="flex flex-col gap-3">
+                                <Link href={`/edit-blog/${blog.id}`}>
+                                    <button className="w-full py-3 bg-card border border-border text-foreground font-bold rounded-xl hover:bg-primary/10 hover:border-primary/50 transition-all flex items-center justify-center gap-2">
+                                        <Pencil className="w-4 h-4" /> Edit Story
+                                    </button>
+                                </Link>
+                                <DeleteBlogButton id={blog.id} />
+                            </div>
+                        </div>
+                    )}
+
                     {relatedBlogs.length > 0 && (
                         <div>
                             <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-6">More from {blog.category}</h4>
@@ -154,7 +171,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
                                 {relatedBlogs.map(b => (
                                     <Link key={b.id} href={`/blogs/${b.id}`} className="group block">
                                         <div className="relative aspect-video rounded-xl overflow-hidden mb-3">
-                                            <Image src={b.image} alt={b.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                                            <img src={b.image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                         </div>
                                         <h5 className="font-bold text-sm group-hover:text-primary transition-colors line-clamp-2">{b.title}</h5>
                                     </Link>
