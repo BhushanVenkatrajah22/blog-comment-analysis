@@ -11,7 +11,7 @@ import { blogs } from "@/lib/data";
 const navLinks = [
     { name: "Home", href: "/" },
     { name: "Blogs", href: "/blogs", dropdown: true },
-    { name: "Review Blog", href: "#" },
+    { name: "Review Blog", href: "/review-blog" },
     { name: "Contact", href: "/contact" },
 ];
 

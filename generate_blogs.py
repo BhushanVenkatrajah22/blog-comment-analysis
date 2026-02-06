@@ -40,6 +40,43 @@ titles = [
     "{} for Beginners and Experts"
 ]
 
+intros = [
+    "In the rapidly evolving landscape of {cat}, staying ahead of the curve is no longer just an advantage—it's a necessity. As we look towards the horizon of 2026, the integration of innovative methodologies is redefining how we approach digital excellence.",
+    "The world of {cat} is undergoing a fundamental transformation. From the way teams collaborate to the very tools we use, the boundaries of what's possible are being pushed further every day. In this deep dive, we explore the core drivers of this change.",
+    "Understanding the intricacies of {cat} requires more than just a surface-level overview. It demands a rigorous analysis of current trends and a strategic outlook on future developments. Join us as we unpack the complexities of this vital industry pillar."
+]
+
+body_sections = [
+    {
+        "heading": "The Current Landscape",
+        "content": "The current state of {cat} is marked by unprecedented growth and complexity. Industry leaders are increasingly turning to advanced solutions to manage the growing demands of modern consumers. This shift is characterized by a move towards more modular, scalable, and resilient systems that can adapt to changing market conditions in real-time."
+    },
+    {
+        "heading": "Key Challenges and Opportunities",
+        "content": "Despite the progress, several challenges remain. Integration hurdles, security concerns, and the need for specialized talent continue to be significant roadblocks. However, these challenges also present unique opportunities for innovation. By leveraging emerging technologies and adopting a proactive mindset, organizations can turn these obstacles into competitive advantages."
+    },
+    {
+        "heading": "Technical Implementation Strategies",
+        "content": "When it comes to the technical side of {cat}, a multi-layered approach is often the most effective. This involves not only choosing the right stack but also ensuring that the underlying architecture is robust enough to support long-term growth. Performance optimization, automated testing, and continuous deployment are no longer optional—they are core components of any successful strategy."
+    },
+    {
+        "heading": "The Role of Human-Centric Design",
+        "content": "In our quest for technical efficiency, it's easy to lose sight of the end user. However, {cat} is ultimately about creating value for people. Human-centric design principles should be at the heart of every decision, ensuring that technology serves as an enabler rather than a barrier. This means prioritizing accessibility, inclusivity, and intuitive user experiences at every stage of development."
+    },
+    {
+        "heading": "Strategic Outlook for 2026",
+        "content": "Looking ahead, the future of {cat} is bright. We anticipate a surge in the adoption of AI-driven tools, decentralized architectures, and more sustainable engineering practices. These trends will not only improve the quality of digital products but also create new avenues for creative expression and business growth. The key to success will be agility and a commitment to lifelong learning."
+    }
+]
+
+quotes = [
+    "Innovation distinguishes between a leader and a follower. - Steve Jobs",
+    "The best way to predict the future is to create it. - Peter Drucker",
+    "Design is not just what it looks like and feels like. Design is how it works. - Steve Jobs",
+    "Technology is best when it brings people together. - Matt Mullenweg",
+    "The only way to do great work is to love what you do. - Steve Jobs"
+]
+
 blogs = []
 start_date = datetime(2026, 2, 6)
 
@@ -52,27 +89,51 @@ for i in range(1, 51):
     date = start_date - timedelta(days=i*2 + random.randint(0, 5))
     formatted_date = date.strftime("%b %d, %Y")
     
-    title = random.choice(titles).format(category)
-    if i <= 6: # Keep some of the original titles for consistency
-        # Assuming original titles were unique, I'll just append something to distinguish them if needed
-        # But user wants 50 so I'll just generate fresh ones.
-        pass
+    title_pattern = random.choice(titles)
+    title = title_pattern.format(category)
+    if i > len(titles):
+        title = f"{title} (Exploration {i // len(titles) + 1})"
+
+    intro = random.choice(intros).replace("{cat}", category)
+    
+    selected_sections = random.sample(body_sections, 4)
+    content_parts = [f"<p>{intro}</p>"]
+    for section in selected_sections:
+        content_parts.append(f"<h3>{section['heading']}</h3>")
+        content_parts.append(f"<p>{section['content'].replace('{cat}', category)}</p>")
+    
+    quote = random.choice(quotes)
+    quote_text, quote_author = quote.split(" - ")
+    content_parts.append(f"<blockquote>\"{quote_text}\" <br/>— <cite>{quote_author}</cite></blockquote>")
+    
+    conclusion = f"<p>In conclusion, the journey through the world of {category} is an ongoing process of discovery and refinement. By staying curious, embracing change, and focusing on quality, we can build a future that is not only technologically advanced but also deeply meaningful.</p>"
+    content_parts.append(conclusion)
+    
+    content = "".join(content_parts)
+    
+    word_count = len(content.split())
+    read_time = max(5, word_count // 180)
 
     blog = {
         "id": str(i),
-        "title": f"{title} #{i}",
-        "excerpt": f"Discover how {category.lower()} is shaping the future of industrial technology and creativity in this wide-reaching analysis.",
-        "content": f"<p>This is a detailed analysis of {category}.</p><h3>Introduction</h3><p>Content for {category} exploration goes here. We are looking at various aspects including Author's perspective on {category}.</p><blockquote>'Progress is impossible without change.' - George Bernard Shaw</blockquote><p>More content about {category} and its implications in {date.year}.</p>",
+        "title": title,
+        "excerpt": f"An in-depth look at how {category.lower()} is evolving in the modern digital landscape. We explore techniques, tools, and the mental models required to succeed.",
+        "content": content,
         "author": author,
         "authorRole": role,
         "date": formatted_date,
-        "readTime": f"{random.randint(4, 15)} min read",
+        "timestamp": int(date.timestamp() * 1000),
+        "readTime": f"{read_time} min read",
         "image": image,
         "category": category,
-        "tags": [category, "Tech", "2026"]
+        "tags": [category, "Insights", "2026", "Tech"]
     }
     blogs.append(blog)
 
-# Output as TS constant
+# Sort blogs by timestamp descending
+blogs.sort(key=lambda x: x['timestamp'], reverse=True)
+
 with open('blogs_output.json', 'w') as f:
     json.dump(blogs, f, indent=2)
+
+print(f"Successfully generated {len(blogs)} enhanced blog posts to blogs_output.json")
