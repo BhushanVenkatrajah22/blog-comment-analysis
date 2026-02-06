@@ -156,21 +156,22 @@ export default function Home() {
             <div className="relative">
               <div className="grid grid-cols-2 gap-6 relative z-10">
                 {categories.map((cat: string, i: number) => (
-                  <motion.div
-                    key={cat}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    whileHover={{ y: -10, scale: 1.05 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="p-8 rounded-[2.5rem] bg-white/5 backdrop-blur-2xl border border-white/10 text-center hover:border-primary/50 group transition-all cursor-pointer shadow-2xl shadow-black/50"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 mx-auto group-hover:bg-primary group-hover:scale-110 transition-all">
-                      <Zap className="w-6 h-6 text-primary group-hover:text-primary-foreground" />
-                    </div>
-                    <span className="text-lg font-black block tracking-tight">{cat}</span>
-                    <span className="text-[10px] uppercase font-bold text-muted-foreground mt-2 block tracking-widest">Explore</span>
-                  </motion.div>
+                  <Link href={`/blogs?category=${cat}`} key={cat}>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      whileHover={{ y: -10, scale: 1.05 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1 }}
+                      className="p-8 rounded-[2.5rem] bg-white/5 backdrop-blur-2xl border border-white/10 text-center hover:border-primary/50 group transition-all cursor-pointer shadow-2xl shadow-black/50"
+                    >
+                      <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 mx-auto group-hover:bg-primary group-hover:scale-110 transition-all">
+                        <Zap className="w-6 h-6 text-primary group-hover:text-primary-foreground" />
+                      </div>
+                      <span className="text-lg font-black block tracking-tight">{cat}</span>
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground mt-2 block tracking-widest">Explore</span>
+                    </motion.div>
+                  </Link>
                 ))}
               </div>
               {/* Decorative Glow */}

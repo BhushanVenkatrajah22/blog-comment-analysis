@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { User, Send, MessageSquare, LogIn, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { addComment } from "@/lib/actions";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation"; // Added useSearchParams
 
 interface BlogCommentsProps {
     blogId: string;
@@ -16,6 +18,8 @@ interface BlogCommentsProps {
 export default function BlogComments({ blogId, initialComments }: BlogCommentsProps) {
     const { data: session } = useSession();
     const router = useRouter();
+    const searchParams = useSearchParams(); // Added searchParams
+    const categoryFilter = searchParams.get("category"); // Added categoryFilter
     const [comments, setComments] = useState<Comment[]>(
         [...initialComments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     );
@@ -72,69 +76,65 @@ export default function BlogComments({ blogId, initialComments }: BlogCommentsPr
                 </div>
             </div>
 
-            {/* Comment Form or Auth Prompt */}
-            {!session?.user ? (
-                <div className="mb-16 p-8 bg-primary/5 border border-dashed border-primary/30 rounded-3xl text-center group hover:bg-primary/10 transition-all">
-                    <LogIn className="w-10 h-10 text-primary mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                    <h4 className="text-xl font-bold mb-2">Join the Conversation</h4>
-                    <p className="text-muted-foreground mb-6">You must be logged in to share your thoughts.</p>
-                    <Link
-                        href={`/login?callbackUrl=/blogs/${blogId}`}
-                        className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20"
-                    >
-                        Sign In to Comment
-                    </Link>
-                </div>
-            ) : (
-                <form onSubmit={handleSubmit} className="mb-16">
-                    <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-xl shadow-primary/5 focus-within:border-primary/50 transition-all hover:shadow-primary/10">
-                        <div className="flex gap-4 items-start">
-                            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-primary/10 border border-primary/20">
-                                {session.user?.image ? (
-                                    <img src={session.user.image} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <User className="w-6 h-6 text-primary" />
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex-1 space-y-4">
-                                <textarea
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                    placeholder={`Hey ${session.user?.name?.split(" ")[0] || "there"}, what are your thoughts?`}
-                                    className="w-full bg-transparent border-none outline-none resize-none text-foreground placeholder:text-muted-foreground pt-2 min-h-[100px] text-lg"
-                                />
-                                {error && <p className="text-xs text-red-500 font-bold">{error}</p>}
-                                <div className="flex items-center justify-between pt-4 border-t border-border/50">
-                                    <p className="text-xs text-muted-foreground italic">
-                                        Signed in as {session.user?.email}
-                                    </p>
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        disabled={isSubmitting || !newComment.trim()}
-                                        className={cn(
-                                            "px-8 py-3 bg-primary text-primary-foreground font-bold rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center gap-2",
-                                            (isSubmitting || !newComment.trim()) && "opacity-50 cursor-not-allowed"
-                                        )}
-                                    >
-                                        {isSubmitting ? (
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                        ) : (
-                                            <Send className="w-4 h-4" />
-                                        )}
-                                        Post Comment
-                                    </motion.button>
+            {/* Comment Form */}
+            <form onSubmit={handleSubmit} className="mb-16">
+                <div className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-xl shadow-primary/5 focus-within:border-primary/50 transition-all hover:shadow-primary/10">
+                    <div className="flex gap-4 items-start">
+                        <div className="w-12 h-12 rounded-2xl overflow-hidden bg-primary/10 border border-primary/20">
+                            {session?.user?.image ? (
+                                <img src={session.user.image} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <User className="w-6 h-6 text-primary" />
                                 </div>
+                            )}
+                        </div>
+                        <div className="flex-1 space-y-4">
+                            <textarea
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                placeholder={`Hey ${session?.user?.name?.split(" ")[0] || "there"}, what are your thoughts?`}
+                                className="w-full bg-transparent border-none outline-none resize-none text-foreground placeholder:text-muted-foreground pt-2 min-h-[100px] text-lg"
+                            />
+                            {error && <p className="text-xs text-red-500 font-bold">{error}</p>}
+                            <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                                <p className="text-xs text-muted-foreground italic">
+                                    {session?.user ? `Signed in as ${session.user.email}` : "Posting as Guest"}
+                                </p>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    disabled={isSubmitting || !newComment.trim()}
+                                    className={cn(
+                                        "px-8 py-3 bg-primary text-primary-foreground font-bold rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center gap-2",
+                                        (isSubmitting || !newComment.trim()) && "opacity-50 cursor-not-allowed"
+                                    )}
+                                >
+                                    {isSubmitting ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Send className="w-4 h-4" />
+                                    )}
+                                    Post Comment
+                                </motion.button>
                             </div>
                         </div>
                     </div>
-                </form>
-            )}
+                </div>
+            </form>
 
             <div className="space-y-12">
                 <AnimatePresence initial={false}>
+                    {categoryFilter && ( // Added categoryFilter check and button
+                        <motion.button
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            onClick={() => router.push("/blogs")}
+                            className="mt-6 text-sm font-bold text-primary hover:underline flex items-center gap-2"
+                        >
+                            Clear Filter
+                        </motion.button>
+                    )}
                     {comments.map((comment) => (
                         <motion.div
                             key={comment.id}
