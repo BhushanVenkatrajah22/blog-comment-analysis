@@ -55,6 +55,14 @@ export default function BlogCard({ blog, index }: BlogCardProps) {
                     {blog.excerpt}
                 </p>
 
+                <div className="flex flex-wrap gap-2 mb-6">
+                    {blog.tags.slice(0, 2).map(tag => (
+                        <span key={tag} className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-muted rounded text-muted-foreground">
+                            {tag}
+                        </span>
+                    ))}
+                </div>
+
                 <Link
                     href={`/blogs/${blog.id}`}
                     className="inline-flex items-center text-sm font-medium text-primary hover:gap-2 transition-all"

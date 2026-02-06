@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
   --color-background: var(--background);
@@ -54,6 +55,7 @@
   * {
     border-color: var(--border);
   }
+
   body {
     background-color: var(--background);
     color: var(--foreground);
@@ -65,13 +67,16 @@
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
-  background: var(--background); 
+  background: var(--background);
 }
+
 ::-webkit-scrollbar-thumb {
-  background: var(--muted); 
+  background: var(--muted);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary); 
+  background: var(--primary);
 }

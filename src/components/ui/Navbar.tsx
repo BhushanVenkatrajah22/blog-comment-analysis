@@ -4,21 +4,27 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-import { Menu, X, Sparkles } from "lucide-react";
+import { Menu, X, Sparkles, ChevronDown, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { blogs } from "@/lib/data";
 
 const navLinks = [
     { name: "Home", href: "/" },
-    { name: "Blogs", href: "/blogs" },
-    { name: "Review Blog", href: "/blogs" }, // Pointing to blogs for now
+    { name: "Blogs", href: "/blogs", dropdown: true },
+    { name: "Review Blog", href: "#" },
     { name: "Contact", href: "/contact" },
 ];
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
     const { scrollY } = useScroll();
     const pathname = usePathname();
+
+    const recentBlogs = [...blogs]
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, 10);
 
     useMotionValueEvent(scrollY, "change", (latest) => {
         if (latest > 50) {
@@ -28,9 +34,9 @@ export default function Navbar() {
         }
     });
 
-    // Close mobile menu on route change
     useEffect(() => {
         setIsOpen(false);
+        setShowDropdown(false);
     }, [pathname]);
 
     return (
@@ -59,23 +65,77 @@ export default function Navbar() {
                 {/* Desktop Navigation */}
                 <div className="hidden md:flex items-center gap-8">
                     {navLinks.map((link) => (
-                        <Link
+                        <div
                             key={link.name}
-                            href={link.href}
-                            className={cn(
-                                "relative text-sm font-medium transition-colors hover:text-primary",
-                                pathname === link.href ? "text-primary" : "text-muted-foreground"
-                            )}
+                            className="relative group"
+                            onMouseEnter={() => link.dropdown && setShowDropdown(true)}
+                            onMouseLeave={() => link.dropdown && setShowDropdown(false)}
                         >
-                            {link.name}
-                            {pathname === link.href && (
-                                <motion.div
-                                    layoutId="navbar-indicator"
-                                    className="absolute -bottom-[24px] left-0 right-0 h-[2px] bg-primary"
-                                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                                />
+                            <Link
+                                href={link.href}
+                                className={cn(
+                                    "flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary py-2",
+                                    pathname === link.href ? "text-primary" : "text-muted-foreground"
+                                )}
+                            >
+                                {link.name}
+                                {link.dropdown && <ChevronDown className={cn("w-4 h-4 transition-transform", showDropdown && "rotate-180")} />}
+                                {pathname === link.href && (
+                                    <motion.div
+                                        layoutId="navbar-indicator"
+                                        className="absolute -bottom-[24px] left-0 right-0 h-[2px] bg-primary"
+                                        transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                                    />
+                                )}
+                            </Link>
+
+                            {/* Dropdown Menu */}
+                            {link.dropdown && (
+                                <AnimatePresence>
+                                    {showDropdown && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 10 }}
+                                            className="absolute top-full left-0 w-[300px] bg-card border border-border rounded-2xl shadow-2xl p-4 mt-2 overflow-hidden"
+                                        >
+                                            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3 px-2">
+                                                Latest Stories
+                                            </div>
+                                            <div className="space-y-1">
+                                                {recentBlogs.map((blog) => (
+                                                    <Link
+                                                        key={blog.id}
+                                                        href={`/blogs/${blog.id}`}
+                                                        className="block p-2 rounded-xl hover:bg-primary/5 transition-colors group/item"
+                                                    >
+                                                        <p className="text-sm font-bold line-clamp-1 group-hover/item:text-primary transition-colors">
+                                                            {blog.title}
+                                                        </p>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 rounded text-primary font-medium">
+                                                                {blog.category}
+                                                            </span>
+                                                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                                                <Clock className="w-3 h-3" /> {blog.date}
+                                                            </span>
+                                                        </div>
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                            <div className="mt-4 pt-4 border-t border-border">
+                                                <Link
+                                                    href="/blogs"
+                                                    className="block w-full text-center py-2 bg-secondary/50 hover:bg-secondary rounded-xl text-xs font-bold transition-colors"
+                                                >
+                                                    View All 50 Posts
+                                                </Link>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             )}
-                        </Link>
+                        </div>
                     ))}
                     <motion.button
                         whileHover={{ scale: 1.05 }}
