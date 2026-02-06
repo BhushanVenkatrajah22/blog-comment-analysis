@@ -89,16 +89,24 @@ function generateBlogs(count: number): Blog[] {
     const imgBase = images[i % images.length];
     const titleBase = titles[i % titles.length];
 
-    const timestamp = now - (i * 2 * dayInMs) - (Math.random() * dayInMs);
+    // Use deterministic random values based on index i
+    const randomOffset = (i * 1337) % dayInMs;
+    const timestamp = now - (i * 2 * dayInMs) - randomOffset;
     const dateObj = new Date(timestamp);
-    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: '2-digit' });
+
+    // Stable date formatting: Jan 01, 26
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const dateStr = `${months[dateObj.getMonth()]} ${String(dateObj.getDate()).padStart(2, '0')}, ${String(dateObj.getFullYear()).slice(-2)}`;
 
     // Assemble dynamic content
     const intro = intros[i % intros.length].replace(/{cat}/g, cat);
-    const sections = bodySections
-      .sort(() => 0.5 - Math.random()) // Randomize section order slightly for variety
-      .slice(0, 4) // Pick 4 sections
-      .map(s => `<h3>${s.heading}</h3><p>${s.content.replace(/{cat}/g, cat)}</p>`)
+
+    // Deterministic section selection and ordering
+    const sections = [...bodySections]
+      .map((s, idx) => ({ s, sortKey: (idx + i) % bodySections.length }))
+      .sort((a, b) => a.sortKey - b.sortKey)
+      .slice(0, 4)
+      .map(item => `<h3>${item.s.heading}</h3><p>${item.s.content.replace(/{cat}/g, cat)}</p>`)
       .join("");
 
     const quote = quotes[i % quotes.length];
