@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-import { Menu, X, Sparkles, ChevronDown, Clock } from "lucide-react";
+import { Menu, X, Sparkles, ChevronDown, Clock, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { blogs as mockBlogs } from "@/lib/data";
 import { getRecentBlogs } from "@/lib/actions";
@@ -22,9 +22,16 @@ export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [dbRecentBlogs, setDbRecentBlogs] = useState<any[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
     const { data: session, status } = useSession();
+    const router = useRouter();
     const { scrollY } = useScroll();
     const pathname = usePathname();
+
+    // Debugging useRouter
+    useEffect(() => {
+        if (!router) console.error("useRouter is null in Navbar");
+    }, [router]);
 
     useEffect(() => {
         const fetchRecent = async () => {
@@ -53,6 +60,14 @@ export default function Navbar() {
         setShowDropdown(false);
     }, [pathname]);
 
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+            setSearchQuery("");
+        }
+    };
+
     return (
         <motion.nav
             className={cn(
@@ -75,6 +90,20 @@ export default function Navbar() {
                         NovaBlog
                     </span>
                 </Link>
+
+                {/* Search Bar */}
+                <div className="hidden lg:flex flex-1 max-w-md mx-8">
+                    <form onSubmit={handleSearch} className="relative w-full group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Find a story..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-secondary/50 border border-border rounded-full py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all placeholder:text-muted-foreground/50"
+                        />
+                    </form>
+                </div>
 
                 {/* Desktop Navigation */}
                 <div className="hidden md:flex items-center gap-8">
