@@ -67,7 +67,7 @@ function analyzeSentiment(content: string): 'positive' | 'negative' | 'neutral' 
     return 'neutral';
 }
 
-export async function addComment(blogId: string, userId: string, content: string) {
+export async function addComment(blogId: string, userId: string | null, content: string) {
     if (!content.trim()) return { error: "Comment cannot be empty" };
 
     const sentiment = analyzeSentiment(content);
@@ -77,7 +77,7 @@ export async function addComment(blogId: string, userId: string, content: string
             data: {
                 content,
                 blogId,
-                userId,
+                userId: userId || null,
                 sentiment,
             },
             include: {

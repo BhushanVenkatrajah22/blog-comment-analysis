@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User, Send, MessageSquare, LogIn, Loader2, Smile, Frown, Meh, Percent } from "lucide-react";
+import { User, Send, MessageSquare, Loader2, Smile, Frown, Meh, Percent } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Comment } from "@/lib/data";
 import { cn } from "@/lib/utils";
@@ -29,17 +29,13 @@ export default function BlogComments({ blogId, initialComments }: BlogCommentsPr
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newComment.trim() || !session?.user) return;
+        if (!newComment.trim()) return;
 
         setIsSubmitting(true);
         setError("");
 
         try {
-            const userId = (session as any)?.user?.id;
-            if (!userId) {
-                setError("You must be logged in to comment.");
-                return;
-            }
+            const userId = (session as any)?.user?.id || null;
             const result = await addComment(blogId, userId, newComment);
 
             if (result.success) {
@@ -49,7 +45,7 @@ export default function BlogComments({ blogId, initialComments }: BlogCommentsPr
 
                 const comment: Comment = {
                     id: result.comment!.id,
-                    author: session.user?.name || "Anonymous",
+                    author: session?.user?.name || "Guest",
                     content: newComment,
                     date: dateStr,
                     sentiment: (result.comment as any).sentiment || 'neutral',

@@ -4,10 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-import { Menu, X, Sparkles, ChevronDown, Clock, LogIn, LogOut, User as UserIcon } from "lucide-react";
+import { Menu, X, Sparkles, ChevronDown, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { blogs } from "@/lib/data";
-import { useSession, signOut } from "next-auth/react";
 
 const navLinks = [
     { name: "Home", href: "/" },
@@ -16,11 +15,9 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-    const { data: session, status } = useSession();
     const [isOpen, setIsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
-    const [showUserMenu, setShowUserMenu] = useState(false);
     const { scrollY } = useScroll();
     const pathname = usePathname();
 
@@ -39,7 +36,6 @@ export default function Navbar() {
     useEffect(() => {
         setIsOpen(false);
         setShowDropdown(false);
-        setShowUserMenu(false);
     }, [pathname]);
 
     return (

@@ -69,10 +69,6 @@ export default function Home() {
               THE<br />NOVA<br />ERA.
             </h1>
 
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-16 leading-relaxed font-medium">
-              A high-fidelity platform for the digital architect. <br className="hidden md:block" />
-              Where complex data meets exquisite design.
-            </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <Link href="/blogs">
@@ -83,15 +79,6 @@ export default function Home() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                   Explore Blogs <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                </motion.button>
-              </Link>
-              <Link href="/login">
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-10 py-5 bg-white/5 backdrop-blur-xl border border-white/10 text-white rounded-2xl font-black text-xl hover:bg-white/10 transition-all"
-                >
-                  Join Nova
                 </motion.button>
               </Link>
             </div>
@@ -218,14 +205,9 @@ export default function Home() {
               READY TO JOIN THE <br className="hidden md:block" /> FUTURE OF BLOGGING?
             </h2>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <Link href="/signup" className="w-full sm:w-auto">
+              <Link href="/blogs" className="w-full sm:w-auto">
                 <button className="w-full px-12 py-6 bg-white text-primary font-black text-xl rounded-2xl hover:bg-white/90 transition-all shadow-2xl">
-                  Start Storytelling
-                </button>
-              </Link>
-              <Link href="/login" className="w-full sm:w-auto">
-                <button className="w-full px-12 py-6 bg-primary-foreground/10 border border-white/20 text-white font-black text-xl rounded-2xl hover:bg-white/10 transition-all">
-                  Log In
+                  Explore Full Journal
                 </button>
               </Link>
             </div>
