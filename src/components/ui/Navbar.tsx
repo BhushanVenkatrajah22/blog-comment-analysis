@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-import { Menu, X, Sparkles, ChevronDown, Clock } from "lucide-react";
+import { Menu, X, Sparkles, ChevronDown, Clock, LogIn, LogOut, User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { blogs } from "@/lib/data";
+import { useSession, signOut } from "next-auth/react";
 
 const navLinks = [
     { name: "Home", href: "/" },
@@ -16,9 +17,11 @@ const navLinks = [
 ];
 
 export default function Navbar() {
+    const { data: session, status } = useSession();
     const [isOpen, setIsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
     const { scrollY } = useScroll();
     const pathname = usePathname();
 
@@ -37,6 +40,7 @@ export default function Navbar() {
     useEffect(() => {
         setIsOpen(false);
         setShowDropdown(false);
+        setShowUserMenu(false);
     }, [pathname]);
 
     return (
@@ -137,13 +141,62 @@ export default function Navbar() {
                             )}
                         </div>
                     ))}
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="px-5 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-                    >
-                        Subscribe
-                    </motion.button>
+
+                    <div className="h-6 w-px bg-border mx-2" />
+
+                    {status === "authenticated" ? (
+                        <div className="relative" onMouseEnter={() => setShowUserMenu(true)} onMouseLeave={() => setShowUserMenu(false)}>
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="flex items-center gap-3 pl-2 pr-4 py-1.5 bg-secondary/50 hover:bg-secondary border border-border rounded-full transition-all group"
+                            >
+                                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center border border-primary/50 text-[10px] font-bold text-primary-foreground overflow-hidden">
+                                    {session.user?.image ? (
+                                        <img src={session.user.image} alt={session.user.name || "User"} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <UserIcon className="w-4 h-4" />
+                                    )}
+                                </div>
+                                <span className="text-sm font-bold tracking-tight line-clamp-1 max-w-[100px]">{session.user?.name?.split(' ')[0]}</span>
+                            </motion.button>
+
+                            <AnimatePresence>
+                                {showUserMenu && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        className="absolute top-full right-0 w-[200px] bg-card border border-border rounded-2xl shadow-2xl p-2 mt-2"
+                                    >
+                                        <div className="px-3 py-2 mb-2">
+                                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Account</p>
+                                            <p className="text-xs font-medium truncate">{session.user?.email}</p>
+                                        </div>
+                                        <button
+                                            onClick={() => signOut()}
+                                            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-red-500 hover:bg-red-500/10 transition-colors"
+                                        >
+                                            <LogOut className="w-4 h-4" /> Sign Out
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-4">
+                            <Link href="/login" className="text-sm font-bold hover:text-primary transition-colors flex items-center gap-2">
+                                <LogIn className="w-4 h-4" /> Sign In
+                            </Link>
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="px-5 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+                            >
+                                Subscribe
+                            </motion.button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Mobile Toggle */}
@@ -178,9 +231,37 @@ export default function Navbar() {
                                 </Link>
                             ))}
                             <hr className="border-border my-2" />
-                            <button className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-medium shadow-lg shadow-primary/20">
-                                Subscribe
-                            </button>
+                            {status === "authenticated" ? (
+                                <>
+                                    <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-2xl">
+                                        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                                            {session.user?.name?.[0]}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold">{session.user?.name}</p>
+                                            <p className="text-xs text-muted-foreground">{session.user?.email}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => signOut()}
+                                        className="w-full flex items-center justify-center gap-2 py-4 text-red-500 font-bold bg-red-500/5 rounded-2xl"
+                                    >
+                                        <LogOut className="w-5 h-5" /> Sign Out
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <Link
+                                        href="/login"
+                                        className="w-full py-4 flex items-center justify-center gap-2 bg-secondary/50 hover:bg-secondary rounded-2xl font-bold transition-all"
+                                    >
+                                        <LogIn className="w-5 h-5" /> Sign In
+                                    </Link>
+                                    <button className="w-full py-4 bg-primary text-primary-foreground rounded-2xl font-bold shadow-lg shadow-primary/20">
+                                        Subscribe
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </motion.div>
                 )}

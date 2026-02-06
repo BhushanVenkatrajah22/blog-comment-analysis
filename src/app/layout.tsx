@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description: "A modern, high-performance blog platform built with Next.js 15.",
 };
 
+import { Providers } from "@/components/providers";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,11 +31,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen flex flex-col`}
       >
-        <Navbar />
-        <main className="flex-grow">
-          {children}
-        </main>
-        <Footer />
+        <Providers>
+          <Navbar />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
