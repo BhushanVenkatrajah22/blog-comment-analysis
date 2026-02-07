@@ -9,6 +9,9 @@ import { cn } from "@/lib/utils";
 import { blogs as mockBlogs } from "@/lib/data";
 import { getRecentBlogs } from "@/lib/actions";
 import { useSession, signOut } from "next-auth/react";
+import ThemeSwitcher from "@/components/ui/ThemeSwitcher";
+import UserBadges from "@/components/ui/UserBadges";
+import { getUserBadges } from "@/lib/gamification";
 
 const navLinks = [
     { name: "Home", href: "/" },
@@ -23,6 +26,7 @@ export default function Navbar() {
     const [showDropdown, setShowDropdown] = useState(false);
     const [dbRecentBlogs, setDbRecentBlogs] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const [userBadges, setUserBadges] = useState<string[]>([]);
     const { data: session, status } = useSession();
     const router = useRouter();
     const { scrollY } = useScroll();
@@ -42,6 +46,18 @@ export default function Navbar() {
         };
         fetchRecent();
     }, [pathname]); // Refresh when navigating
+
+    useEffect(() => {
+        const fetchBadges = async () => {
+            if (session?.user?.id) {
+                const { badges } = await getUserBadges(session.user.id);
+                setUserBadges(badges);
+            }
+        };
+        if (status === "authenticated") {
+            fetchBadges();
+        }
+    }, [session, status, pathname]);
 
     const recentBlogs = [...dbRecentBlogs, ...mockBlogs]
         .sort((a, b) => b.timestamp - a.timestamp)
@@ -184,8 +200,10 @@ export default function Navbar() {
                     <div className="h-6 w-px bg-border mx-2" />
 
                     <div className="flex items-center gap-4">
+                        <ThemeSwitcher />
                         {status === "authenticated" ? (
                             <div className="flex items-center gap-4">
+                                <UserBadges badges={userBadges} />
                                 <div className="flex flex-col items-end hidden lg:flex">
                                     <span className="text-xs font-bold leading-none">{session.user?.name}</span>
                                     <span className="text-[10px] text-muted-foreground">Resident</span>

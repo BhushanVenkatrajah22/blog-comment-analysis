@@ -1,27 +1,18 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+// Log API key status for debugging
+const apiKey = process.env.GEMINI_API_KEY || "";
+console.log("[Gemini] API Key loaded:", apiKey ? "✓ Yes" : "✗ No");
+console.log("[Gemini] API Key length:", apiKey.length);
 
-async function getModel() {
-    // Try models in order of preference/stability
-    const models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+const genAI = new GoogleGenerativeAI(apiKey);
 
-    for (const modelName of models) {
-        try {
-            const model = genAI.getGenerativeModel({ model: modelName });
-            // Quick test to see if the model exists/accessible
-            // We don't want to do this every time, so we could cache the successful model name
-            return model;
-        } catch (e) {
-            console.warn(`Model ${modelName} initialization failed, trying next...`);
-        }
-    }
-    return genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Fallback to default
-}
+// Initialize the model once
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 export async function getSentiment(content: string): Promise<'positive' | 'negative' | 'neutral'> {
-    if (!process.env.GEMINI_API_KEY) {
-        console.warn("GEMINI_API_KEY not found. Falling back to keyword analysis.");
+    if (!apiKey) {
+        console.warn("[Gemini] GEMINI_API_KEY not found. Falling back to keyword analysis.");
         return analyzeSentimentFallback(content);
     }
 
@@ -38,7 +29,7 @@ export async function getSentiment(content: string): Promise<'positive' | 'negat
         if (text.includes("negative")) return "negative";
         return "neutral";
     } catch (error) {
-        console.error("Gemini Sentiment Error:", error);
+        console.error("[Gemini] Sentiment Error:", error);
         return analyzeSentimentFallback(content);
     }
 }
@@ -63,7 +54,8 @@ function analyzeSentimentFallback(content: string): 'positive' | 'negative' | 'n
 }
 
 export async function generateSummary(content: string): Promise<string> {
-    if (!process.env.GEMINI_API_KEY) {
+    if (!apiKey) {
+        console.error("[Gemini] Cannot generate summary: GEMINI_API_KEY is missing");
         return "Smart TL;DR is currently unavailable. Please check your API configuration.";
     }
 
@@ -74,17 +66,25 @@ export async function generateSummary(content: string): Promise<string> {
         
         Article: "${cleanContent}"`;
 
+        console.log("[Gemini] Generating summary...");
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        return response.text().trim();
-    } catch (error) {
-        console.error("Gemini Summary Error:", error);
+        const summary = response.text().trim();
+        console.log("[Gemini] Summary generated successfully");
+        return summary;
+    } catch (error: any) {
+        if (error.message?.includes('429') || error.status === 429) {
+            console.warn("[Gemini] Rate limit exceeded for Summary.");
+            return "Smart TL;DR is temporarily unavailable due to high traffic. Please try again later.";
+        }
+        console.error("[Gemini] Summary Error:", error.message);
         return "Failed to generate summary. Please try again later.";
     }
 }
 
 export async function askAboutArticle(content: string, question: string): Promise<string> {
-    if (!process.env.GEMINI_API_KEY) {
+    if (!apiKey) {
+        console.error("[Gemini] Cannot answer question: GEMINI_API_KEY is missing");
         return "I'm sorry, I cannot answer questions right now. Please check the API configuration.";
     }
 
@@ -99,11 +99,18 @@ export async function askAboutArticle(content: string, question: string): Promis
 
         User Question: "${question}"`;
 
+        console.log("[Gemini] Processing question:", question);
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        return response.text().trim();
-    } catch (error) {
-        console.error("Gemini Chat Error:", error);
+        const answer = response.text().trim();
+        console.log("[Gemini] Answer generated successfully");
+        return answer;
+    } catch (error: any) {
+        if (error.message?.includes('429') || error.status === 429) {
+            console.warn("[Gemini] Rate limit exceeded for Chat.");
+            return "I'm currently overwhelmed with requests. Please try again in a few moments.";
+        }
+        console.error("[Gemini] Chat Error:", error.message);
         return "I encountered an error while processing your question. Please try again.";
     }
 }

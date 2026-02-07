@@ -7,7 +7,11 @@ import BlogCard from "@/components/ui/BlogCard";
 import BlogComments from "@/components/ui/BlogComments";
 import DeleteBlogButton from "@/components/ui/DeleteBlogButton";
 import { getBlogById, getAllBlogs, getBlogSummary } from "@/lib/actions";
-import ArticleChat from "@/components/ui/ArticleChat";
+import { getBlogSentiment, getPoll, getUserVote, createDemoPoll } from "@/lib/gamification";
+import SentimentHeatmap from "@/components/ui/SentimentHeatmap";
+import PollWidget from "@/components/ui/PollWidget";
+import BlogTracker from "@/components/blog-tracker";
+import { auth } from "@/auth";
 import { Sparkles } from "lucide-react";
 
 interface PageProps {
@@ -22,16 +26,36 @@ export default async function BlogDetailPage({ params }: PageProps) {
         notFound();
     }
 
-    const allBlogs = await getAllBlogs();
+    // Auth & Gamification Data
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    // Trigger demo poll creation (fire and forget pattern)
+    createDemoPoll(id);
+
+    // Parallel data fetching
+    const [allBlogs, sentiment, pollData] = await Promise.all([
+        getAllBlogs(),
+        getBlogSentiment(id),
+        getPoll(id)
+    ]);
+
+    let userVotedOptionId = null;
+    if (pollData.poll && userId) {
+        const vote = await getUserVote(pollData.poll.id, userId);
+        userVotedOptionId = vote.votedOptionId;
+    }
+
     const relatedBlogs = allBlogs
         .filter((b) => b.id !== id && b.category === blog.category)
         .slice(0, 2);
 
-    const summaryResult = await getBlogSummary(id, blog.content);
-    const summary = summaryResult.success ? summaryResult.summary : null;
+    const summary = null;
 
     return (
         <article className="min-h-screen pb-20">
+            {userId && <BlogTracker blogId={id} userId={userId} />}
+
             {/* Hero Header */}
             <div className="relative h-[70vh] min-h-[500px] w-full">
                 <img
@@ -92,6 +116,10 @@ export default async function BlogDetailPage({ params }: PageProps) {
                 {/* Left Sidebar / Meta */}
                 <aside className="lg:col-span-3 lg:block hidden">
                     <div className="sticky top-32 space-y-12">
+
+                        {/* Sentiment Heatmap */}
+                        <SentimentHeatmap {...sentiment} />
+
                         <div>
                             <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Share this story</h4>
                             <div className="flex gap-2">
@@ -116,20 +144,6 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
                 {/* Article Body */}
                 <div className="lg:col-span-6">
-                    {summary && (
-                        <div className="mb-12 p-8 bg-primary/5 border border-primary/20 rounded-3xl relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-4">
-                                <Sparkles className="w-5 h-5 text-primary opacity-50 group-hover:opacity-100 transition-opacity" />
-                            </div>
-                            <h3 className="text-sm font-bold text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
-                                Smart TL;DR
-                            </h3>
-                            <p className="text-xl font-medium text-foreground/90 leading-relaxed italic">
-                                "{summary}"
-                            </p>
-                        </div>
-                    )}
-
                     <div
                         className="prose prose-invert prose-primary max-w-none 
               prose-headings:font-extrabold prose-headings:tracking-tight
@@ -139,6 +153,19 @@ export default async function BlogDetailPage({ params }: PageProps) {
               prose-strong:text-foreground prose-a:text-primary prose-a:no-underline hover:prose-a:underline"
                         dangerouslySetInnerHTML={{ __html: blog.content }}
                     />
+
+                    {/* Poll Widget */}
+                    {pollData.poll && (
+                        <PollWidget
+                            pollId={pollData.poll.id}
+                            question={pollData.poll.question}
+                            options={pollData.poll.options}
+                            totalVotes={pollData.poll.totalVotes}
+                            userVotedOptionId={userVotedOptionId}
+                            blogId={id}
+                            userId={userId} // Pass userId
+                        />
+                    )}
 
                     <div className="mt-16 pt-16 border-t border-border">
                         <div className="flex items-center gap-6 p-8 bg-card rounded-3xl border border-border relative overflow-hidden group">
@@ -201,7 +228,6 @@ export default async function BlogDetailPage({ params }: PageProps) {
                 </aside>
 
             </div>
-            <ArticleChat blogId={blog.id} />
         </article>
     );
 }

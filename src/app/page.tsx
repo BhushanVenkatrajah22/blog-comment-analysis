@@ -5,7 +5,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Zap, Shield, Globe, Sparkles, TrendingUp, Users, Cpu } from "lucide-react";
 import BlogCard from "@/components/ui/BlogCard";
 import { blogs as mockBlogs, categories } from "@/lib/data";
-import NovaParticles from "@/components/ui/NovaParticles";
+import InteractiveParticles from "@/components/ui/InteractiveParticles";
 import { useRef, useState, useEffect } from "react";
 import { getAllBlogs } from "@/lib/actions";
 import { Blog } from "@/lib/data";
@@ -57,7 +57,7 @@ export default function Home() {
 
   return (
     <div ref={containerRef} className="flex flex-col min-h-screen relative overflow-x-hidden">
-      <NovaParticles />
+      <InteractiveParticles />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-24 pb-12 overflow-hidden">

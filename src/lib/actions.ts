@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { getSentiment, generateSummary, askAboutArticle } from "./gemini";
+import { blogs as mockBlogs } from "./data";
 
 const signupSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -48,9 +50,8 @@ export async function signup(prevState: any, formData: FormData) {
     }
 }
 
-import { getSentiment, generateSummary, askAboutArticle } from "./gemini";
-
 export async function getBlogSummary(id: string, content: string) {
+    console.log("[getBlogSummary] Called for blog ID:", id);
     try {
         // Only attempt DB lookups for non-mock blogs
         const isMock = id.length <= 2 && !isNaN(Number(id));
@@ -62,9 +63,11 @@ export async function getBlogSummary(id: string, content: string) {
             });
 
             if (blog?.summary) {
+                console.log("[getBlogSummary] Using cached summary from database");
                 return { success: true, summary: blog.summary };
             }
 
+            console.log("[getBlogSummary] Generating new summary via Gemini API");
             const summary = await generateSummary(content);
 
             await prisma.blog.update({
@@ -76,15 +79,20 @@ export async function getBlogSummary(id: string, content: string) {
         }
 
         // For mock blogs, just generate (no persistence)
+        console.log("[getBlogSummary] Generating summary for mock blog");
         const summary = await generateSummary(content);
         return { success: true, summary };
     } catch (err) {
-        console.error("Error in getBlogSummary:", err);
+        console.error("[getBlogSummary] Error:", err);
+        if (err instanceof Error) {
+            console.error("[getBlogSummary] Error message:", err.message);
+        }
         return { success: false, error: "Cloud not fetch summary" };
     }
 }
 
 export async function askQuestion(id: string, question: string) {
+    console.log("[askQuestion] Called for blog ID:", id, "Question:", question);
     try {
         const isMock = id.length <= 2 && !isNaN(Number(id));
         let content = "";
@@ -99,12 +107,20 @@ export async function askQuestion(id: string, question: string) {
             content = blog?.content || "";
         }
 
-        if (!content) return { error: "Article content not found" };
+        if (!content) {
+            console.error("[askQuestion] Article content not found");
+            return { error: "Article content not found" };
+        }
 
+        console.log("[askQuestion] Calling Gemini API...");
         const answer = await askAboutArticle(content, question);
+        console.log("[askQuestion] Answer received");
         return { success: true, answer };
     } catch (err) {
-        console.error("Error in askQuestion:", err);
+        console.error("[askQuestion] Error:", err);
+        if (err instanceof Error) {
+            console.error("[askQuestion] Error message:", err.message);
+        }
         return { error: "Failed to process question" };
     }
 }
@@ -115,11 +131,53 @@ export async function addComment(blogId: string, userId: string | null, content:
     const sentiment = await getSentiment(content);
 
     try {
+        // 1. Validate User (Handle Stale Sessions)
+        let finalUserId = userId;
+        if (userId) {
+            const userExists = await prisma.user.findUnique({ where: { id: userId } });
+            if (!userExists) {
+                console.warn(`[addComment] User ${userId} not found in DB. Commenting as Guest.`);
+                finalUserId = null;
+            }
+        }
+
+        // 2. Ensure Blog Exists (Persist Mock Blog)
+        const dbBlog = await prisma.blog.findUnique({ where: { id: blogId } });
+
+        if (!dbBlog) {
+            console.log(`[addComment] Blog ${blogId} not found in DB. Searching mock data...`);
+            const mockBlog = mockBlogs.find(b => b.id === blogId);
+
+            if (mockBlog) {
+                console.log(`[addComment] Found mock blog: ${mockBlog.title}. Creating in DB...`);
+                await prisma.blog.create({
+                    data: {
+                        id: mockBlog.id,
+                        title: mockBlog.title,
+                        excerpt: mockBlog.excerpt,
+                        content: mockBlog.content,
+                        author: mockBlog.author,
+                        authorRole: mockBlog.authorRole,
+                        date: mockBlog.date,
+                        timestamp: BigInt(mockBlog.timestamp),
+                        readTime: mockBlog.readTime,
+                        image: mockBlog.image,
+                        category: mockBlog.category,
+                        tags: mockBlog.tags.join(", "),
+                    }
+                });
+                console.log(`[addComment] Mock blog ${blogId} persisted successfully.`);
+            } else {
+                return { error: "Blog post not found." };
+            }
+        }
+
+        // 3. Create Comment
         const comment = await prisma.comment.create({
             data: {
                 content,
                 blogId,
-                userId: userId || null,
+                userId: finalUserId,
                 sentiment,
             },
             include: {
@@ -131,7 +189,12 @@ export async function addComment(blogId: string, userId: string | null, content:
         return { success: true, comment };
     } catch (err) {
         console.error("Error adding comment:", err);
-        return { error: "Failed to add comment" };
+        // @ts-ignore
+        if (err.meta) console.error("Prisma Error Meta:", err.meta);
+        // @ts-ignore
+        if (err.code) console.error("Prisma Error Code:", err.code);
+
+        return { error: "Failed to add comment. Please try again." };
     }
 }
 
@@ -187,8 +250,6 @@ export async function getRecentBlogs() {
     }
 }
 
-import { blogs as mockBlogs } from "./data";
-
 export async function getAllBlogs() {
     try {
         const dbBlogs = await prisma.blog.findMany({
@@ -203,8 +264,12 @@ export async function getAllBlogs() {
             tags: typeof b.tags === 'string' ? b.tags.split(",").map((t: string) => t.trim()) : b.tags
         }));
 
-        // Merge DB blogs with mock blogs
-        const allBlogs = [...serializedDbBlogs, ...mockBlogs].sort((a, b) => b.timestamp - a.timestamp);
+        // Filter out mock blogs that are already in DB (to avoid duplicates)
+        const dbIds = new Set(serializedDbBlogs.map(b => b.id));
+        const filteredMockBlogs = mockBlogs.filter(b => !dbIds.has(b.id));
+
+        // Merge DB blogs with remaining mock blogs
+        const allBlogs = [...serializedDbBlogs, ...filteredMockBlogs].sort((a, b) => b.timestamp - a.timestamp);
         return allBlogs;
     } catch (err) {
         console.error("Error fetching all blogs:", err);

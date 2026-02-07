@@ -17,6 +17,12 @@ model User {
   accounts      Account[]
   sessions      Session[]
   comments      Comment[]
+  
+  // Gamification
+  badges        String    @default("") // Comma-separated IDs: "avid-reader,first-responder"
+  points        Int       @default(0)
+  readingHistory ReadingHistory[]
+  pollVotes     PollVote[]
 }
 
 model Account {
@@ -81,4 +87,46 @@ model Comment {
   sentiment String   @default("neutral")
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+}
+
+// Gamification Models
+
+model Poll {
+  id        String       @id @default(cuid())
+  question  String
+  blogId    String
+  active    Boolean      @default(true)
+  options   PollOption[]
+  votes     PollVote[]
+  createdAt DateTime     @default(now())
+}
+
+model PollOption {
+  id     String     @id @default(cuid())
+  text   String
+  pollId String
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes  PollVote[]
+}
+
+model PollVote {
+  id       String     @id @default(cuid())
+  pollId   String
+  optionId String
+  userId   String
+  poll     Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option   PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId])
+}
+
+model ReadingHistory {
+  id         String   @id @default(cuid())
+  userId     String
+  blogId     String
+  accessedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
