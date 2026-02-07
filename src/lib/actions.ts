@@ -118,7 +118,8 @@ export async function getRecentBlogs() {
         });
         const serializedBlogs = dbBlogs.map((b: any) => ({
             ...b,
-            timestamp: Number(b.timestamp)
+            timestamp: Number(b.timestamp),
+            tags: typeof b.tags === 'string' ? b.tags.split(",").map((t: string) => t.trim()) : b.tags
         }));
         return { success: true, blogs: serializedBlogs };
     } catch (err) {
@@ -139,7 +140,8 @@ export async function getAllBlogs() {
 
         const serializedDbBlogs = dbBlogs.map((b: any) => ({
             ...b,
-            timestamp: Number(b.timestamp)
+            timestamp: Number(b.timestamp),
+            tags: typeof b.tags === 'string' ? b.tags.split(",").map((t: string) => t.trim()) : b.tags
         }));
 
         // Merge DB blogs with mock blogs
@@ -167,7 +169,8 @@ export async function getBlogById(id: string) {
         if (dbBlog) {
             return {
                 ...dbBlog,
-                timestamp: Number(dbBlog.timestamp)
+                timestamp: Number(dbBlog.timestamp),
+                tags: typeof dbBlog.tags === 'string' ? dbBlog.tags.split(",").map((t: string) => t.trim()) : dbBlog.tags
             };
         }
 

@@ -97,7 +97,7 @@ export default function BlogCard({ blog, index }: BlogCardProps) {
                 </p>
 
                 <div className="flex flex-wrap gap-2 mb-6">
-                    {(Array.isArray(blog.tags) ? blog.tags : (blog.tags as string).split(",")).slice(0, 2).map(tag => (
+                    {blog.tags.slice(0, 2).map(tag => (
                         <span key={tag} className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-muted rounded text-muted-foreground">
                             {tag.trim()}
                         </span>

@@ -46,7 +46,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
                         </Link>
 
                         <div className="flex flex-wrap gap-2 mb-6">
-                            {blog.tags.split(",").map((tag: string) => (
+                            {blog.tags.map((tag: string) => (
                                 <span key={tag} className="px-3 py-1 bg-primary/20 backdrop-blur-md border border-primary/30 rounded-full text-xs font-semibold text-primary uppercase tracking-wider">
                                     {tag.trim()}
                                 </span>
@@ -101,7 +101,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
                         <div className="pt-8 border-t border-border">
                             <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Top Tags</h4>
                             <div className="flex flex-wrap gap-2">
-                                {blog.tags.split(",").map((tag: string) => (
+                                {blog.tags.map((tag: string) => (
                                     <Link key={tag} href="#" className="text-sm text-foreground/70 hover:text-primary transition-colors underline-offset-4 hover:underline">#{tag.trim()}</Link>
                                 ))}
                             </div>
