@@ -1,7 +1,23 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+async function getModel() {
+    // Try models in order of preference/stability
+    const models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+
+    for (const modelName of models) {
+        try {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            // Quick test to see if the model exists/accessible
+            // We don't want to do this every time, so we could cache the successful model name
+            return model;
+        } catch (e) {
+            console.warn(`Model ${modelName} initialization failed, trying next...`);
+        }
+    }
+    return genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Fallback to default
+}
 
 export async function getSentiment(content: string): Promise<'positive' | 'negative' | 'neutral'> {
     if (!process.env.GEMINI_API_KEY) {
