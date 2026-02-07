@@ -67,6 +67,7 @@ model Blog {
   image       String
   category    String
   tags        String
+  summary     String?
   comments    Comment[]
   createdAt   DateTime  @default(now())
 }

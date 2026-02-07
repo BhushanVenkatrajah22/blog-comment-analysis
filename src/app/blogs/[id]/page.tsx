@@ -6,7 +6,9 @@ import { blogs as mockBlogs } from "@/lib/data";
 import BlogCard from "@/components/ui/BlogCard";
 import BlogComments from "@/components/ui/BlogComments";
 import DeleteBlogButton from "@/components/ui/DeleteBlogButton";
-import { getBlogById, getAllBlogs } from "@/lib/actions";
+import { getBlogById, getAllBlogs, getBlogSummary } from "@/lib/actions";
+import ArticleChat from "@/components/ui/ArticleChat";
+import { Sparkles } from "lucide-react";
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -24,6 +26,9 @@ export default async function BlogDetailPage({ params }: PageProps) {
     const relatedBlogs = allBlogs
         .filter((b) => b.id !== id && b.category === blog.category)
         .slice(0, 2);
+
+    const summaryResult = await getBlogSummary(id, blog.content);
+    const summary = summaryResult.success ? summaryResult.summary : null;
 
     return (
         <article className="min-h-screen pb-20">
@@ -111,6 +116,20 @@ export default async function BlogDetailPage({ params }: PageProps) {
 
                 {/* Article Body */}
                 <div className="lg:col-span-6">
+                    {summary && (
+                        <div className="mb-12 p-8 bg-primary/5 border border-primary/20 rounded-3xl relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4">
+                                <Sparkles className="w-5 h-5 text-primary opacity-50 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                            <h3 className="text-sm font-bold text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
+                                Smart TL;DR
+                            </h3>
+                            <p className="text-xl font-medium text-foreground/90 leading-relaxed italic">
+                                "{summary}"
+                            </p>
+                        </div>
+                    )}
+
                     <div
                         className="prose prose-invert prose-primary max-w-none 
               prose-headings:font-extrabold prose-headings:tracking-tight
@@ -182,6 +201,7 @@ export default async function BlogDetailPage({ params }: PageProps) {
                 </aside>
 
             </div>
+            <ArticleChat blogId={blog.id} />
         </article>
     );
 }

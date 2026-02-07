@@ -48,7 +48,66 @@ export async function signup(prevState: any, formData: FormData) {
     }
 }
 
-import { getSentiment } from "./gemini";
+import { getSentiment, generateSummary, askAboutArticle } from "./gemini";
+
+export async function getBlogSummary(id: string, content: string) {
+    try {
+        // Only attempt DB lookups for non-mock blogs
+        const isMock = id.length <= 2 && !isNaN(Number(id));
+
+        if (!isMock) {
+            const blog = await prisma.blog.findUnique({
+                where: { id },
+                select: { summary: true }
+            });
+
+            if (blog?.summary) {
+                return { success: true, summary: blog.summary };
+            }
+
+            const summary = await generateSummary(content);
+
+            await prisma.blog.update({
+                where: { id },
+                data: { summary }
+            });
+
+            return { success: true, summary };
+        }
+
+        // For mock blogs, just generate (no persistence)
+        const summary = await generateSummary(content);
+        return { success: true, summary };
+    } catch (err) {
+        console.error("Error in getBlogSummary:", err);
+        return { success: false, error: "Cloud not fetch summary" };
+    }
+}
+
+export async function askQuestion(id: string, question: string) {
+    try {
+        const isMock = id.length <= 2 && !isNaN(Number(id));
+        let content = "";
+
+        if (isMock) {
+            content = mockBlogs.find(b => b.id === id)?.content || "";
+        } else {
+            const blog = await prisma.blog.findUnique({
+                where: { id },
+                select: { content: true }
+            });
+            content = blog?.content || "";
+        }
+
+        if (!content) return { error: "Article content not found" };
+
+        const answer = await askAboutArticle(content, question);
+        return { success: true, answer };
+    } catch (err) {
+        console.error("Error in askQuestion:", err);
+        return { error: "Failed to process question" };
+    }
+}
 
 export async function addComment(blogId: string, userId: string | null, content: string) {
     if (!content.trim()) return { error: "Comment cannot be empty" };

@@ -19,6 +19,7 @@ export type Blog = {
   image: string;
   category: string;
   tags: string[];
+  summary?: string;
   comments: Comment[];
 };
 
